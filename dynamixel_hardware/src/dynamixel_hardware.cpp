@@ -38,6 +38,15 @@ constexpr const char * kPresentVelocityItem = "Present_Velocity";
 constexpr const char * kPresentSpeedItem = "Present_Speed";
 constexpr const char * kPresentCurrentItem = "Present_Current";
 constexpr const char * kPresentLoadItem = "Present_Load";
+constexpr const char* const extraJointParameters[] = {
+  "Profile_Velocity",
+  "Profile_Acceleration",
+  "Position_P_Gain",
+  "Position_I_Gain",
+  "Position_D_Gain"
+  "Velocity_P_Gain",
+  "Velocity_I_Gain",
+};
 
 CallbackReturn DynamixelHardware::on_init(const hardware_interface::HardwareInfo & info)
 {
@@ -86,6 +95,17 @@ CallbackReturn DynamixelHardware::on_init(const hardware_interface::HardwareInfo
     if (!dynamixel_workbench_.ping(joint_ids_[i], &model_number, &log)) {
       RCLCPP_FATAL(rclcpp::get_logger(kDynamixelHardware), "%s", log);
       return CallbackReturn::ERROR;
+    }
+
+    for (auto paramName : extraJointParameters) {
+      if (info_.joints[i].parameters.find(paramName) != info_.joints[i].parameters.end()) {
+        auto value = std::stoi(info_.joints[i].parameters.at(paramName));
+        if (!dynamixel_workbench_.itemWrite(joint_ids_[i], paramName, value, &log)) {
+          RCLCPP_FATAL(rclcpp::get_logger(kDynamixelHardware), "%s", log);
+          return CallbackReturn::ERROR;
+        }
+        RCLCPP_INFO(rclcpp::get_logger(kDynamixelHardware), "%s set to %d for joint %d", paramName, value, i);
+      }
     }
   }
 
