@@ -96,7 +96,11 @@ CallbackReturn DynamixelHardware::on_init(const hardware_interface::HardwareInfo
       RCLCPP_FATAL(rclcpp::get_logger(kDynamixelHardware), "%s", log);
       return CallbackReturn::ERROR;
     }
+  }
 
+  enable_torque(false);
+  set_control_mode(ControlMode::Position, true);
+  for (uint i = 0; i < info_.joints.size(); ++i) {
     for (auto paramName : extraJointParameters) {
       if (info_.joints[i].parameters.find(paramName) != info_.joints[i].parameters.end()) {
         auto value = std::stoi(info_.joints[i].parameters.at(paramName));
@@ -108,9 +112,6 @@ CallbackReturn DynamixelHardware::on_init(const hardware_interface::HardwareInfo
       }
     }
   }
-
-  enable_torque(false);
-  set_control_mode(ControlMode::Position, true);
   enable_torque(true);
 
   const ControlItem * goal_position =
